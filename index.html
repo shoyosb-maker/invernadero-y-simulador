@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Gemelo digital del invernadero de cafe con simulador climatico y control automatico en Babylon.js" />
+    <title>Invernadero de cafe · Gemelo digital</title>
+  </head>
+  <body>
+    <canvas id="renderCanvas" aria-label="Escena 3D del invernadero"></canvas>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 27c-6.2-2.3-9.4-6.4-9.4-12.2C6.6 9.4 10.2 5 16 5s9.4 4.4 9.4 9.8C25.4 20.6 22.2 24.7 16 27Z" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M16 27V12m0 6.8 4.8-4.4M16 17.5l-4.5-3.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Invernadero <span>de café</span></h1>
+          <p>Gemelo digital · Babylon.js</p>
+        </div>
+      </div>
+
+      <div class="top-status">
+        <span id="modeChip" class="chip auto">AUTO</span>
+        <span id="clock" class="clock">D001 10:00</span>
+        <span id="weatherChip" class="chip ghost">Sol</span>
+      </div>
+
+      <div class="top-actions">
+        <button id="playBtn" class="btn primary" type="button">
+          <span class="play-icon" aria-hidden="true">▶</span>
+          <span id="playLabel">Marcha</span>
+        </button>
+        <div id="speedGroup" class="speed-group" aria-label="Velocidad de simulación">
+          <button type="button" data-speed="1">1x</button>
+          <button type="button" data-speed="10">10x</button>
+          <button type="button" data-speed="60" class="active">60x</button>
+          <button type="button" data-speed="300">300x</button>
+        </div>
+        <button id="resetBtn" class="btn icon" type="button" title="Reiniciar simulador">↺</button>
+        <button id="helpBtn" class="btn icon" type="button" title="Ayuda">?</button>
+      </div>
+
+      <div class="mobile-actions">
+        <button id="toggleLeft" class="btn small" type="button">Sensores</button>
+        <button id="toggleRight" class="btn small" type="button">Control</button>
+      </div>
+    </header>
+
+    <aside id="leftPanel" class="side-panel left-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Telemetría</p>
+          <h2>Sensores</h2>
+        </div>
+        <div class="panel-head-actions">
+          <span id="stabilityChip" class="chip ok">Estable</span>
+          <button id="leftCollapse" class="panel-collapse" type="button" title="Ocultar sensores" aria-label="Ocultar sensores" aria-expanded="true" aria-controls="leftPanel">‹</button>
+        </div>
+      </div>
+
+      <section class="sensor-grid">
+        <article class="sensor-card" data-sensor="temp">
+          <div class="sensor-top"><span class="sensor-icon">T</span><span class="sensor-label">Temperatura</span></div>
+          <div class="sensor-value"><strong id="v-temp">--</strong><span>°C</span></div>
+          <div class="meter"><i id="b-temp"></i></div>
+          <small id="s-temp">Interior</small>
+        </article>
+        <article class="sensor-card" data-sensor="rh">
+          <div class="sensor-top"><span class="sensor-icon">HR</span><span class="sensor-label">Humedad</span></div>
+          <div class="sensor-value"><strong id="v-rh">--</strong><span>%</span></div>
+          <div class="meter"><i id="b-rh"></i></div>
+          <small id="s-rh">Relativa</small>
+        </article>
+        <article class="sensor-card" data-sensor="vpd">
+          <div class="sensor-top"><span class="sensor-icon">VPD</span><span class="sensor-label">Déficit vapor</span></div>
+          <div class="sensor-value"><strong id="v-vpd">--</strong><span>kPa</span></div>
+          <div class="meter"><i id="b-vpd"></i></div>
+          <small id="s-vpd">Transpiración</small>
+        </article>
+        <article class="sensor-card" data-sensor="co2">
+          <div class="sensor-top"><span class="sensor-icon">CO₂</span><span class="sensor-label">Dióxido carbono</span></div>
+          <div class="sensor-value"><strong id="v-co2">--</strong><span>ppm</span></div>
+          <div class="meter"><i id="b-co2"></i></div>
+          <small id="s-co2">Enriquecimiento</small>
+        </article>
+        <article class="sensor-card" data-sensor="par">
+          <div class="sensor-top"><span class="sensor-icon">PAR</span><span class="sensor-label">Luz activa</span></div>
+          <div class="sensor-value"><strong id="v-par">--</strong><span>µmol</span></div>
+          <div class="meter"><i id="b-par"></i></div>
+          <small id="s-par">m²/s · DLI <b id="v-dli">--</b></small>
+        </article>
+        <article class="sensor-card" data-sensor="soil">
+          <div class="sensor-top"><span class="sensor-icon">S</span><span class="sensor-label">Suelo</span></div>
+          <div class="sensor-value"><strong id="v-soil">--</strong><span>%</span></div>
+          <div class="meter"><i id="b-soil"></i></div>
+          <small>Temp. <b id="v-soiltemp">--</b> °C</small>
+        </article>
+      </section>
+
+      <h3 class="section-title">Agua y fertirrigación</h3>
+      <section class="metric-grid">
+        <div class="metric"><span>Depósito</span><strong><b id="v-tank">--</b> %</strong><div class="meter small"><i id="b-tank"></i></div></div>
+        <div class="metric"><span>Lluvia</span><strong><b id="v-rain">--</b> %</strong><div class="meter small"><i id="b-rain"></i></div></div>
+        <div class="metric"><span>Presión</span><strong><b id="v-pressure">--</b> bar</strong></div>
+        <div class="metric"><span>Caudal</span><strong><b id="v-flow">--</b> m³/h</strong></div>
+        <div class="metric"><span>pH</span><strong><b id="v-ph">--</b></strong></div>
+        <div class="metric"><span>EC</span><strong><b id="v-ec">--</b> mS</strong></div>
+      </section>
+
+      <h3 class="section-title">Energía y cultivo</h3>
+      <section class="metric-grid">
+        <div class="metric"><span>Batería</span><strong><b id="v-battery">--</b> %</strong><div class="meter small"><i id="b-battery"></i></div></div>
+        <div class="metric"><span>Solar</span><strong><b id="v-solar">--</b> kW</strong></div>
+        <div class="metric"><span>Carga</span><strong><b id="v-load">--</b> kW</strong></div>
+        <div class="metric"><span>Generado hoy</span><strong><b id="v-energy">--</b> kWh</strong></div>
+        <div class="metric"><span>Cultivo</span><strong><b id="v-crop">--</b></strong><small id="v-cropday">Día 1</small></div>
+        <div class="metric"><span>Roya</span><strong><b id="v-rust">--</b> %</strong><div class="meter small"><i id="b-rust"></i></div></div>
+        <div class="metric wide"><span>Cámara de frío</span><strong><b id="v-chamber">--</b> °C · <b id="v-chamberrh">--</b> % HR</strong></div>
+      </section>
+
+      <div class="panel-foot">
+        <span class="live-dot"></span> Datos simulados en tiempo real
+      </div>
+    </aside>
+
+    <aside id="rightPanel" class="side-panel right-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Control</p>
+          <h2>Cerebro y ambiente</h2>
+        </div>
+        <div class="panel-head-actions">
+          <span id="manualBadge" class="chip auto">AUTO</span>
+          <button id="rightCollapse" class="panel-collapse" type="button" title="Ocultar control" aria-label="Ocultar control" aria-expanded="true" aria-controls="rightPanel">›</button>
+        </div>
+      </div>
+
+      <section class="control-section">
+        <div class="section-row"><h3>Escenarios</h3><span class="hint">Ambiente exterior</span></div>
+        <div class="preset-grid">
+          <button type="button" class="preset sunny" data-preset="sunny">☀<span>Sol</span></button>
+          <button type="button" class="preset cloudy" data-preset="cloudy">☁<span>Nublado</span></button>
+          <button type="button" class="preset cold" data-preset="cold_night">☾<span>Noche fría</span></button>
+          <button type="button" class="preset storm" data-preset="storm">⛈<span>Tormenta</span></button>
+          <button type="button" class="preset heat" data-preset="heatwave">☀<span>Ola de calor</span></button>
+          <button type="button" class="preset power" data-preset="powercut">⚡<span>Corte de luz</span></button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-row">
+          <h3>Ambiente exterior</h3>
+          <label class="switch"><input id="dayCycle" type="checkbox" checked /><span></span></label>
+        </div>
+        <div class="slider-row"><label for="outHour">Hora</label><output id="outHourValue">10:00</output><input id="outHour" type="range" min="0" max="24" step="0.1" value="10" /></div>
+        <div class="slider-row"><label for="outTemp">T exterior</label><output id="outTempValue">22 °C</output><input id="outTemp" type="range" min="-5" max="45" step="0.5" value="22" /></div>
+        <div class="slider-row"><label for="outRh">HR exterior</label><output id="outRhValue">60 %</output><input id="outRh" type="range" min="10" max="100" step="1" value="60" /></div>
+        <div class="slider-row"><label for="outSolar">Radiación</label><output id="outSolarValue">850 W/m²</output><input id="outSolar" type="range" min="0" max="1200" step="10" value="850" /></div>
+        <div class="slider-row"><label for="outWind">Viento</label><output id="outWindValue">2 m/s</output><input id="outWind" type="range" min="0" max="20" step="0.5" value="2" /></div>
+        <div class="slider-row"><label for="outRain">Lluvia</label><output id="outRainValue">0 %</output><input id="outRain" type="range" min="0" max="1" step="0.05" value="0" /></div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-row"><h3>Consignas</h3><span class="hint">AUTO las respeta</span></div>
+        <div class="slider-row"><label for="spTemp">T día</label><output id="spTempValue">25 °C</output><input id="spTemp" type="range" min="12" max="38" step="0.5" value="25" /></div>
+        <div class="slider-row"><label for="spTempNight">T noche</label><output id="spTempNightValue">18 °C</output><input id="spTempNight" type="range" min="5" max="30" step="0.5" value="18" /></div>
+        <div class="slider-row"><label for="spTempHeat">Calefacción</label><output id="spTempHeatValue">20 °C</output><input id="spTempHeat" type="range" min="5" max="30" step="0.5" value="20" /></div>
+        <div class="slider-row"><label for="spRh">HR objetivo</label><output id="spRhValue">62 %</output><input id="spRh" type="range" min="30" max="95" step="1" value="62" /></div>
+        <div class="slider-row"><label for="spVpd">VPD objetivo</label><output id="spVpdValue">1.2 kPa</output><input id="spVpd" type="range" min="0.3" max="3" step="0.05" value="1.2" /></div>
+        <div class="slider-row"><label for="spCo2">CO₂ objetivo</label><output id="spCo2Value">800 ppm</output><input id="spCo2" type="range" min="400" max="1500" step="10" value="800" /></div>
+        <div class="slider-row"><label for="spSoil">Humedad suelo</label><output id="spSoilValue">42 %</output><input id="spSoil" type="range" min="15" max="80" step="1" value="42" /></div>
+        <div class="slider-row"><label for="spPh">pH</label><output id="spPhValue">6.0</output><input id="spPh" type="range" min="4.5" max="8" step="0.1" value="6" /></div>
+        <div class="slider-row"><label for="spEc">EC</label><output id="spEcValue">2.0</output><input id="spEc" type="range" min="0.5" max="4" step="0.1" value="2" /></div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-row"><h3>Equipos y seguridad</h3></div>
+        <div class="toggle-grid">
+          <label class="toggle"><input id="autoToggle" type="checkbox" checked /><span class="toggle-track"></span><span>AUTO</span></label>
+          <label class="toggle"><input id="powerToggle" type="checkbox" checked /><span class="toggle-track"></span><span>Red eléctrica</span></label>
+          <label class="toggle"><input id="doorToggle" type="checkbox" /><span class="toggle-track"></span><span>Puerta</span></label>
+          <label class="toggle"><input id="linkToggle" type="checkbox" checked /><span class="toggle-track"></span><span>Enlace</span></label>
+          <label class="toggle"><input id="chamberToggle" type="checkbox" checked /><span class="toggle-track"></span><span>Cámara frío</span></label>
+          <label class="toggle"><input id="muteToggle" type="checkbox" /><span class="toggle-track"></span><span>Silenciar baliza</span></label>
+        </div>
+        <div class="inline-actions">
+          <button id="fillBtn" type="button" class="btn subtle">Llenar depósitos</button>
+          <button id="csvBtn" type="button" class="btn subtle">Exportar CSV</button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-row">
+          <h3>Actuadores</h3>
+          <div id="modeSwitch" class="mode-switch" role="group" aria-label="Modo de control">
+            <button type="button" data-mode="auto">AUTO</button>
+            <button type="button" data-mode="manual">MANUAL</button>
+          </div>
+        </div>
+        <p id="actionHint" class="action-hint">AUTO · pulsa un actuador para pasar a MANUAL</p>
+        <div id="actionGrid" class="action-grid"></div>
+      </section>
+
+      <section class="control-section alarm-section">
+        <div class="section-row"><h3>Alarmas</h3><span id="alarmCount" class="chip ok">0</span></div>
+        <div id="alarmList" class="alarm-list"></div>
+      </section>
+
+      <section class="control-section">
+        <div class="section-row"><h3>Registro</h3><button id="clearLogBtn" class="link-btn" type="button">Limpiar</button></div>
+        <div id="logList" class="log-list"></div>
+      </section>
+    </aside>
+
+    <nav class="view-bar" aria-label="Vistas de cámara">
+      <button type="button" data-view="principal" class="active">Exterior</button>
+      <button type="button" data-view="interior">Interior</button>
+      <button type="button" data-view="equipos">Equipos</button>
+      <button type="button" data-view="co2">CO₂</button>
+      <button type="button" data-view="energia">Solar</button>
+      <button type="button" data-view="aerea">Aérea</button>
+    </nav>
+
+    <button id="leftHandle" class="panel-handle left" type="button" aria-label="Mostrar sensores" title="Mostrar sensores">
+      <span class="handle-chevron">›</span><span class="handle-label">Sensores</span>
+    </button>
+    <button id="rightHandle" class="panel-handle right" type="button" aria-label="Mostrar control" title="Mostrar control">
+      <span class="handle-label">Control</span><span class="handle-chevron">‹</span>
+    </button>
+    <div id="panelBackdrop" class="panel-backdrop"></div>
+
+    <div class="scene-hint">Arrastra para orbitar · rueda para zoom · clic en equipos para enfocar</div>
+    <div id="toast" class="toast"></div>
+
+    <div id="loading" class="loading">
+      <div class="loader"></div>
+      <p class="eyebrow">Cargando escena</p>
+      <h2>Invernadero de café</h2>
+      <p id="loadingText">Preparando el gemelo digital…</p>
+      <div class="progress"><i id="loadingBar"></i></div>
+    </div>
+
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <button id="closeHelp" class="modal-close" type="button" aria-label="Cerrar">×</button>
+        <p class="eyebrow">Guía rápida</p>
+        <h2>Así funciona el gemelo digital</h2>
+        <p>El invernadero que ves es el modelo 3D exportado desde Blender, con los mismos equipos, plantas y animaciones. El panel de la derecha es el <strong>cerebro</strong>: puedes dejarlo en AUTO para que controle el clima, el riego, el CO₂, las luces y la seguridad, o pasar a MANUAL y accionar cada equipo.</p>
+        <ul>
+          <li><strong>Marcha</strong> avanza la simulación. Cambia la velocidad con 1x, 10x, 60x o 300x.</li>
+          <li>Los <strong>escenarios</strong> cargan un ambiente exterior (sol, tormenta, ola de calor…).</li>
+          <li>Las <strong>consignas</strong> son los objetivos del controlador: temperatura, humedad, CO₂ y suelo.</li>
+          <li>Si algo se sale de rango, se enciende la <strong>baliza</strong> y aparece la alarma.</li>
+          <li>Haz clic en la bomba, el CO₂ o el cuadro para volar la cámara a ese equipo.</li>
+        </ul>
+        <p class="modal-note">Modelo cualitativo: los coeficientes están ajustados para que el control reaccione de forma creíble, no para predecir un invernadero real con precisión agronómica.</p>
+        <p class="modal-note">Créditos: plantas de café «Coffee plant» de <a href="https://poly.pizza/m/dam5c-OPC8w" target="_blank" rel="noreferrer">Poly by Google / Poly Pizza</a>, licencia <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>.</p>
+        <button id="closeHelp2" class="btn primary" type="button">Entendido</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

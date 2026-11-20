@@ -1,0 +1,21 @@
+{
+  "name": "proyecto-invernadero",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Gemelo digital web del invernadero de cafe: Babylon.js + simulador climatico",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^9.37.1",
+    "@babylonjs/loaders": "^9.37.1",
+    "@babylonjs/materials": "^9.37.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
