@@ -78,6 +78,14 @@ Después, en GitHub:
 
 La configuración de Vite usa `base: './'`, por lo que funciona tanto en la raíz de un dominio como en la subcarpeta de un repositorio. Si prefieres Netlify o Vercel, usa como comando de build `npm run build` y como carpeta publicada `dist`.
 
+### Si el workflow falla
+
+- **No aparece "Deploy to GitHub Pages"**: el archivo debe estar en la raíz del repositorio, en `.github/workflows/deploy.yml`, y en la rama `main`. Si está dentro de una carpeta `proyecto invernadero/`, GitHub no lo ejecutará.
+- **`Get Pages site failed` o fallo en `Setup Pages`**: ve a **Settings → Pages → Build and deployment → Source** y selecciona **GitHub Actions**. Después abre **Actions → Deploy to GitHub Pages → Re-run all jobs**.
+- **`Could not read package.json` o `Dependencies lock file is not found`**: `package.json` y `package-lock.json` deben estar en la raíz del repositorio, no dentro de una subcarpeta.
+- **`Resource not accessible by integration` al desplegar**: revisa **Settings → Actions → General → Workflow permissions** y permite permisos de lectura y escritura; el workflow ya declara `pages: write` e `id-token: write`.
+- **La web da 404 después de desplegar**: comprueba que el workflow terminó en verde y que la URL es `https://USUARIO.github.io/REPO/`.
+
 ## Estructura
 
 ```
